@@ -28,27 +28,41 @@ fun formatBody(gitFile: GitFile): String {
 
 fun formatCommit(gitFile: GitFile): String {
     val sb = StringBuilder()
-
     val lines = gitFile.body.split("\n").toMutableList()
-    var parts = lineSplitter(lines[0])
-    if (parts[0] == "tree") sb.append(formatTree(parts, lines))
+    var lineIndex = 0
 
-    parts = lineSplitter(lines[0])
-    if (parts[0] == "parent") sb.append(formatParents(parts, lines))
+    var parts = lineSplitter(lines[lineIndex])
+    if (parts[0] == "tree") {
+        sb.append(formatTree(parts))
+        lineIndex++
+    }
 
-    parts = lineSplitter(lines[0])
-    if (parts[0] == "author") sb.append("\nauthor: " + formatEmailTimestamp(parts, lines))
+    parts = lineSplitter(lines[lineIndex])
+    if (parts[0] == "parent") {
+        val stringAndIndex = formatParents(parts, lines, lineIndex)
+        sb.append(stringAndIndex.first)
+        lineIndex = stringAndIndex.second
+    }
 
-    parts = lineSplitter(lines[0])
-    if (parts[0] == "committer") sb.append("\ncommitter: " + formatEmailTimestamp(parts, lines))
+    parts = lineSplitter(lines[lineIndex])
+    if (parts[0] == "author") {
+        sb.append("\nauthor: " + formatEmailTimestamp(parts))
+        lineIndex++
+    }
 
-    if (lines[0].isBlank()) {
+    parts = lineSplitter(lines[lineIndex])
+    if (parts[0] == "committer") {
+        sb.append("\ncommitter: " + formatEmailTimestamp(parts))
+        lineIndex++
+    }
+
+    if (lines[lineIndex].isBlank()) {
         sb.append("\ncommit message:")
-        lines.removeAt(0)
+        lineIndex++
 
-        while (lines[0].isNotBlank()) {
-            sb.append("\n${lines[0]}")
-            lines.removeAt(0)
+        while (lines[lineIndex].isNotBlank()) {
+            sb.append("\n${lines[lineIndex]}")
+            lineIndex++
         }
     }
 
@@ -59,25 +73,26 @@ fun lineSplitter(line: String): List<String> {
     return line.split(" ", limit = 2)
 }
 
-fun formatTree(parts: List<String>, lines: MutableList<String>): String {
-    lines.removeAt(0)
+fun formatTree(parts: List<String>): String {
     return "${parts[0]}: ${parts[1]}"
 }
 
-fun formatParents(parts: List<String>, lines: MutableList<String>): String {
+fun formatParents(parts: List<String>, lines: MutableList<String>, lineIndex: Int): Pair<String, Int> {
     val sb = StringBuilder("\nparents: ${parts[1]}")
-    lines.removeAt(0)
-    val items = lineSplitter(lines[0])
+    val items = lineSplitter(lines[lineIndex + 1])
+    var newLineIndex = lineIndex
 
     if (items.size > 1 && items[0] == "parent") {
         sb.append(" | ${items[1]}")
-        lines.removeAt(0)
+        newLineIndex++
     }
 
-    return sb.toString()
+    newLineIndex++
+
+    return Pair(sb.toString(), newLineIndex)
 }
 
-fun formatEmailTimestamp(parts: List<String>, lines: MutableList<String>): String {
+fun formatEmailTimestamp(parts: List<String>): String {
     val items = parts[1].split("\\s+".toRegex())
     val timeZone = items.last()
     val timestamp = items[items.size - 2]
@@ -92,7 +107,6 @@ fun formatEmailTimestamp(parts: List<String>, lines: MutableList<String>): Strin
     sb.append("${email.trim('<', '>')} ")
     sb.append(if (parts[0] == "author") "original timestamp: " else "commit timestamp: ")
     sb.append(formatTimestamp(timestamp, timeZone))
-    lines.removeAt(0)
 
     return sb.toString()
 }

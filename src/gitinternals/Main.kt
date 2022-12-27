@@ -27,32 +27,32 @@ fun formatBody(gitFile: GitFile): String {
 }
 
 fun formatCommit(gitFile: GitFile): String {
-    var result = ""
+    val sb = StringBuilder()
 
     val lines = gitFile.body.split("\n").toMutableList()
     var parts = lineSplitter(lines[0])
-    if (parts[0] == "tree") result += formatTree(parts, lines)
+    if (parts[0] == "tree") sb.append(formatTree(parts, lines))
 
     parts = lineSplitter(lines[0])
-    if (parts[0] == "parent") result += formatParents(parts, lines)
+    if (parts[0] == "parent") sb.append(formatParents(parts, lines))
 
     parts = lineSplitter(lines[0])
-    if (parts[0] == "author") result += "\nauthor: " + formatEmailTimestamp(parts, lines)
+    if (parts[0] == "author") sb.append("\nauthor: " + formatEmailTimestamp(parts, lines))
 
     parts = lineSplitter(lines[0])
-    if (parts[0] == "committer") result += "\ncommitter: " + formatEmailTimestamp(parts, lines)
+    if (parts[0] == "committer") sb.append("\ncommitter: " + formatEmailTimestamp(parts, lines))
 
     if (lines[0].isBlank()) {
-        result += "\ncommit message:"
+        sb.append("\ncommit message:")
         lines.removeAt(0)
 
         while (lines[0].isNotBlank()) {
-            result += "\n${lines[0]}"
+            sb.append("\n${lines[0]}")
             lines.removeAt(0)
         }
     }
 
-    return result
+    return sb.toString()
 }
 
 fun lineSplitter(line: String): List<String> {
@@ -65,16 +65,16 @@ fun formatTree(parts: List<String>, lines: MutableList<String>): String {
 }
 
 fun formatParents(parts: List<String>, lines: MutableList<String>): String {
-    var result = "\nparents: ${parts[1]}"
+    val sb = StringBuilder("\nparents: ${parts[1]}")
     lines.removeAt(0)
     val items = lineSplitter(lines[0])
 
     if (items.size > 1 && items[0] == "parent") {
-        result += " | ${items[1]}"
+        sb.append(" | ${items[1]}")
         lines.removeAt(0)
     }
 
-    return result
+    return sb.toString()
 }
 
 fun formatEmailTimestamp(parts: List<String>, lines: MutableList<String>): String {
@@ -82,18 +82,19 @@ fun formatEmailTimestamp(parts: List<String>, lines: MutableList<String>): Strin
     val timeZone = items.last()
     val timestamp = items[items.size - 2]
     val email = items[items.size - 3]
-    var result = ""
+    val sb = StringBuilder()
 
     // Name could have many parts
     for (i in 0 until items.size - 3) {
-        result += "${items[i]} "
+        sb.append("${items[i]} ")
     }
 
-    result += "${email.trim('<', '>')} "
-    result += if (parts[0] == "author") "original timestamp: " else "commit timestamp: "
+    sb.append("${email.trim('<', '>')} ")
+    sb.append(if (parts[0] == "author") "original timestamp: " else "commit timestamp: ")
+    sb.append(formatTimestamp(timestamp, timeZone))
     lines.removeAt(0)
 
-    return result + formatTimestamp(timestamp, timeZone)
+    return sb.toString()
 }
 
 fun formatTimestamp(timestamp: String, timeZone: String): String {

@@ -33,15 +33,21 @@ fun formatCommit(gitFile: GitFile): String {
 
     var parts = lineSplitter(lines[lineIndex])
     if (parts[0] == "tree") {
-        sb.append(formatTree(parts))
+        sb.append("tree: ${parts[1]}")
         lineIndex++
     }
 
     parts = lineSplitter(lines[lineIndex])
     if (parts[0] == "parent") {
-        val stringAndIndex = formatParents(parts, lines, lineIndex)
-        sb.append(stringAndIndex.first)
-        lineIndex = stringAndIndex.second
+        sb.append("\nparents: ${parts[1]}")
+        lineIndex++
+    }
+
+    // May be second parent if this is a merge commit
+    parts = lineSplitter(lines[lineIndex])
+    if (parts[0] == "parent") {
+        sb.append(" | ${parts[1]}")
+        lineIndex++
     }
 
     parts = lineSplitter(lines[lineIndex])
@@ -71,25 +77,6 @@ fun formatCommit(gitFile: GitFile): String {
 
 fun lineSplitter(line: String): List<String> {
     return line.split(" ", limit = 2)
-}
-
-fun formatTree(parts: List<String>): String {
-    return "${parts[0]}: ${parts[1]}"
-}
-
-fun formatParents(parts: List<String>, lines: MutableList<String>, lineIndex: Int): Pair<String, Int> {
-    val sb = StringBuilder("\nparents: ${parts[1]}")
-    val items = lineSplitter(lines[lineIndex + 1])
-    var newLineIndex = lineIndex
-
-    if (items.size > 1 && items[0] == "parent") {
-        sb.append(" | ${items[1]}")
-        newLineIndex++
-    }
-
-    newLineIndex++
-
-    return Pair(sb.toString(), newLineIndex)
 }
 
 fun formatEmailTimestamp(parts: List<String>): String {

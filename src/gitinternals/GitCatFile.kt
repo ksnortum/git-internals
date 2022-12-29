@@ -7,10 +7,10 @@ import java.time.format.DateTimeFormatter
 
 class GitCatFile(private val gitFile: GitFile) {
     fun formatBody(): String {
-        return when (gitFile.type) {
-            Type.BLOB -> gitFile.body
-            Type.COMMIT -> formatCommit(gitFile.body)
-            Type.TREE -> formatTree(gitFile.bodyBytes)
+        return when (gitFile.gitType) {
+            GitType.BLOB -> gitFile.body
+            GitType.COMMIT -> formatCommit(gitFile.body)
+            GitType.TREE -> formatTree(gitFile.bodyBytes)
         }
     }
 

@@ -1,5 +1,5 @@
 package gitinternals
 
-enum class Type {
+enum class GitType {
     COMMIT, BLOB, TREE
 }

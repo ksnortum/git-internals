@@ -13,70 +13,55 @@ fun main() {
     println(formatBody(gitFile))
 }
 
-fun promptForString(prompt: String): String {
-    println(prompt)
-    return readln()
-}
-
 fun formatBody(gitFile: GitFile): String {
     return when (gitFile.type) {
         Type.BLOB -> gitFile.body
-        Type.COMMIT -> formatCommit(gitFile)
-        Type.TREE -> gitFile.body
+        Type.COMMIT -> formatCommit(gitFile.body)
+        Type.TREE -> formatTree(gitFile.bodyBytes)
     }
 }
 
-fun formatCommit(gitFile: GitFile): String {
+fun formatCommit(body: String): String {
     val sb = StringBuilder()
-    val lines = gitFile.body.split("\n").toMutableList()
+    val lines = body.split("\n").toMutableList()
     var lineIndex = 0
 
-    var parts = lineSplitter(lines[lineIndex])
-    if (parts[0] == "tree") {
-        sb.append("tree: ${parts[1]}")
-        lineIndex++
-    }
+    var parts = lines[lineIndex].split(" ", limit = 2)
+    sb.append("tree: ${parts[1]}")
+    lineIndex++
 
-    parts = lineSplitter(lines[lineIndex])
+    parts = lines[lineIndex].split(" ", limit = 2)
     if (parts[0] == "parent") {
         sb.append("\nparents: ${parts[1]}")
         lineIndex++
     }
 
     // May be second parent if this is a merge commit
-    parts = lineSplitter(lines[lineIndex])
+    parts = lines[lineIndex].split(" ", limit = 2)
     if (parts[0] == "parent") {
         sb.append(" | ${parts[1]}")
         lineIndex++
     }
 
-    parts = lineSplitter(lines[lineIndex])
-    if (parts[0] == "author") {
-        sb.append("\nauthor: " + formatEmailTimestamp(parts))
-        lineIndex++
-    }
+    parts = lines[lineIndex].split(" ", limit = 2)
+    sb.append("\nauthor: " + formatEmailTimestamp(parts))
+    lineIndex++
 
-    parts = lineSplitter(lines[lineIndex])
-    if (parts[0] == "committer") {
-        sb.append("\ncommitter: " + formatEmailTimestamp(parts))
-        lineIndex++
-    }
+    parts = lines[lineIndex].split(" ", limit = 2)
+    sb.append("\ncommitter: " + formatEmailTimestamp(parts))
+    lineIndex++
 
     if (lines[lineIndex].isBlank()) {
         sb.append("\ncommit message:")
         lineIndex++
 
-        while (lines[lineIndex].isNotBlank()) {
+        while (lineIndex < lines.size && lines[lineIndex].isNotBlank()) {
             sb.append("\n${lines[lineIndex]}")
             lineIndex++
         }
     }
 
     return sb.toString()
-}
-
-fun lineSplitter(line: String): List<String> {
-    return line.split(" ", limit = 2)
 }
 
 fun formatEmailTimestamp(parts: List<String>): String {
@@ -103,4 +88,21 @@ fun formatTimestamp(timestamp: String, timeZone: String): String {
     val date = ZonedDateTime.ofInstant(instant, ZoneId.of(timeZone))
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
     return formatter.format(date)
+}
+
+fun formatTree(body: ByteArray): String {
+    val sb = StringBuilder()
+    var bodyIndex = 0
+
+    while (bodyIndex < body.size) {
+        val (permission, index) = stringUpToSpace(body, bodyIndex)
+        bodyIndex = index
+        val (fileName, index1) = stringUpToNull(body, bodyIndex)
+        bodyIndex = index1
+        val hexSha = body.copyOfRange(bodyIndex, bodyIndex + 20).toHex()
+        bodyIndex += 20
+        sb.append("$permission $hexSha $fileName\n")
+    }
+
+    return sb.toString()
 }

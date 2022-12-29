@@ -9,16 +9,14 @@ class GitFile(private val pathToGit: String, private val hash: String) {
     lateinit var type: Type
         private set
 
-    var initialCommit by Delegates.notNull<Boolean>()
-        private set
-
     var length by Delegates.notNull<Int>()
         private set
 
     lateinit var body: String
         private set
 
-    private val regexForParent = "^parent.*".toRegex()
+    lateinit var bodyBytes: ByteArray
+        private set
 
     init {
         parseFileStats(openGitFile())
@@ -34,12 +32,14 @@ class GitFile(private val pathToGit: String, private val hash: String) {
     }
 
     private fun parseFileStats(iis: InflaterInputStream) {
-        val wholeFile = iis.readAllBytes().decodeToString()
-        val (header, body) = wholeFile.split("\u0000")
-        this.body = body
+        val bytes = iis.readAllBytes()
+        val wholeFile = bytes.decodeToString() // Doesn't decode some binary chars correctly
+        val header = wholeFile.substringBefore(NULL_STRING)
+        body = wholeFile.substringAfter(NULL_STRING)
         val parts = header.split(" ")
         type = Type.valueOf(parts[0].uppercase())
         length = parts[1].toInt()
-        initialCommit = !body.matches(regexForParent)
+        val splitPoint = bytes.indexOfFirst { x -> x == NULL_BYTE }
+        bodyBytes = bytes.copyOfRange(splitPoint + 1, bytes.size)
     }
 }

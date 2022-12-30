@@ -7,6 +7,14 @@ import java.time.format.DateTimeFormatter
 
 const val SHA_LENGTH = 20
 
+const val SHA_REGEX = "([a-f0-9]{40})\$"
+const val TREE_REGEX = "^tree $SHA_REGEX"
+const val PARENT_REGEX = "^parent $SHA_REGEX"
+const val RECORD_REGEX = "((?:\\w+ )+)(<[^>]+>) ([\\d]{10}) ([-+]\\d{4})\$"
+const val AUTHOR_REGEX = "^author $RECORD_REGEX"
+const val COMMITTER_REGEX = "^committer $RECORD_REGEX"
+const val MESSAGE_REGEX = "\\n\\n(.*)\\n"
+
 class GitCatFile(private val gitFile: GitFile) {
     fun formatBody(): String {
         return when (gitFile.gitType) {
@@ -18,61 +26,32 @@ class GitCatFile(private val gitFile: GitFile) {
 
     private fun formatCommit(body: String): String {
         val sb = StringBuilder()
-        val lines = body.split("\n").toMutableList()
-        var lineIndex = 0
 
-        var parts = lines[lineIndex].split(" ", limit = 2)
-        sb.append("tree: ${parts[1]}")
-        lineIndex++
+        val treeMatch = Regex(TREE_REGEX, RegexOption.MULTILINE).find(body)
+        sb.append("tree: ${treeMatch!!.destructured.component1()}")
 
-        parts = lines[lineIndex].split(" ", limit = 2)
-        if (parts[0] == "parent") {
-            sb.append("\nparents: ${parts[1]}")
-            lineIndex++
-        }
+        val parentMatch = Regex(PARENT_REGEX, RegexOption.MULTILINE).findAll(body)
+        val parentSha = parentMatch.asIterable().joinToString(" | ") { it.destructured.component1() }
+        if (parentSha.isNotBlank()) sb.append("\nparents: $parentSha")
 
-        // May be second parent if this is a merge commit
-        parts = lines[lineIndex].split(" ", limit = 2)
-        if (parts[0] == "parent") {
-            sb.append(" | ${parts[1]}")
-            lineIndex++
-        }
+        val authorMatch = Regex(AUTHOR_REGEX, RegexOption.MULTILINE).find(body)
+        sb.append("\nauthor: " + formatEmailTimestamp(authorMatch, isOriginal = true))
 
-        parts = lines[lineIndex].split(" ", limit = 2)
-        sb.append("\nauthor: " + formatEmailTimestamp(parts))
-        lineIndex++
+        val committerMatch = Regex(COMMITTER_REGEX, RegexOption.MULTILINE).find(body)
+        sb.append("\ncommitter: " + formatEmailTimestamp(committerMatch, isOriginal = false))
 
-        parts = lines[lineIndex].split(" ", limit = 2)
-        sb.append("\ncommitter: " + formatEmailTimestamp(parts))
-        lineIndex++
-
-        if (lines[lineIndex].isBlank()) {
-            sb.append("\ncommit message:")
-            lineIndex++
-
-            while (lineIndex < lines.size && lines[lineIndex].isNotBlank()) {
-                sb.append("\n${lines[lineIndex]}")
-                lineIndex++
-            }
-        }
+        sb.append("\ncommit message:")
+        val messageMatch = Regex(MESSAGE_REGEX, RegexOption.DOT_MATCHES_ALL).find(body)
+        sb.append("\n${messageMatch!!.destructured.component1()}")
 
         return sb.toString()
     }
 
-    private fun formatEmailTimestamp(parts: List<String>): String {
-        val items = parts[1].split("\\s+".toRegex())
-        val timeZone = items.last()
-        val timestamp = items[items.size - 2]
-        val email = items[items.size - 3]
-        val sb = StringBuilder()
-
-        // Name could have many parts
-        for (i in 0 until items.size - 3) {
-            sb.append("${items[i]} ")
-        }
-
+    private fun formatEmailTimestamp(matcher: MatchResult?, isOriginal: Boolean): String {
+        val (_, name, email, timestamp, timeZone) = matcher!!.groupValues
+        val sb = StringBuilder(name) // name has a space at the end
         sb.append("${email.trim('<', '>')} ")
-        sb.append(if (parts[0] == "author") "original timestamp: " else "commit timestamp: ")
+        sb.append(if (isOriginal) "original timestamp: " else "commit timestamp: ")
         sb.append(formatTimestamp(timestamp, timeZone))
 
         return sb.toString()

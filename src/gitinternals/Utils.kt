@@ -4,6 +4,8 @@ const val SPACE_BYTE = 32.toByte()
 const val NULL_STRING = "\u0000"
 const val NULL_BYTE = 0.toByte()
 
+data class Wrapper<T> (var value: T)
+
 fun promptForString(prompt: String): String {
     println(prompt)
     return readln()
@@ -21,22 +23,19 @@ fun promptForString(prompt: String): String {
 
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 
-fun stringUpToStopByte(body: ByteArray, indexIn: Int, stopByte: Byte): Pair<String, Int> {
+fun stringUpToStopByte(body: ByteArray, index: Wrapper<Int>, stopByte: Byte): String {
     val sb = StringBuilder()
-    var index = indexIn
 
-    while (index < body.size && body[index] != stopByte) {
-        sb.append(body[index].toInt().toChar())
-        index++
+    while (index.value < body.size && body[index.value] != stopByte) {
+        sb.append(body[index.value].toInt().toChar())
+        index.value++
     }
 
-    index++
+    index.value++
 
-    return Pair(sb.toString(), index)
+    return sb.toString()
 }
 
-fun stringUpToSpace(body: ByteArray, index: Int): Pair<String, Int> = stringUpToStopByte(body, index, SPACE_BYTE)
+fun stringUpToSpace(body: ByteArray, index: Wrapper<Int>): String = stringUpToStopByte(body, index, SPACE_BYTE)
 
-fun stringUpToNull(body: ByteArray, index: Int): Pair<String, Int> = stringUpToStopByte(body, index, NULL_BYTE)
-
-//data class Wrapper<T> (val value: T)
+fun stringUpToNull(body: ByteArray, index: Wrapper<Int>): String = stringUpToStopByte(body, index, NULL_BYTE)

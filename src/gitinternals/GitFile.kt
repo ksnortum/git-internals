@@ -33,12 +33,6 @@ class GitFile(private val pathToGit: String, private val hash: String) {
 
     private fun parseFileStats(iis: InflaterInputStream) {
         val bytes = iis.readAllBytes()
-        // TODO test below
-        val chars: CharArray = bytes.map { it.toInt().toChar() }.toCharArray()
-        val headerString: String = chars.toString().substringBefore(NULL_STRING)
-        val nullIndex: Int = chars.indexOfFirst { x -> x == '\u0000' }
-        val bodyChar: CharArray = chars.copyOfRange(nullIndex + 1, chars.size)
-        // TODO test above
         val wholeFile = bytes.decodeToString() // Doesn't decode some binary chars correctly
         val header = wholeFile.substringBefore(NULL_STRING)
         body = wholeFile.substringAfter(NULL_STRING)

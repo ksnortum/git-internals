@@ -5,6 +5,8 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+const val SHA_LENGTH = 20
+
 class GitCatFile(private val gitFile: GitFile) {
     fun formatBody(): String {
         return when (gitFile.gitType) {
@@ -85,15 +87,13 @@ class GitCatFile(private val gitFile: GitFile) {
 
     private fun formatTree(body: ByteArray): String {
         val sb = StringBuilder()
-        var bodyIndex = 0
+        val bodyIndex = Wrapper(0)
 
-        while (bodyIndex < body.size) {
-            val (permission, index) = stringUpToSpace(body, bodyIndex)
-            bodyIndex = index
-            val (fileName, index1) = stringUpToNull(body, bodyIndex)
-            bodyIndex = index1
-            val hexSha = body.copyOfRange(bodyIndex, bodyIndex + 20).toHex()
-            bodyIndex += 20
+        while (bodyIndex.value < body.size) {
+            val permission = stringUpToSpace(body, bodyIndex)
+            val fileName = stringUpToNull(body, bodyIndex)
+            val hexSha = body.copyOfRange(bodyIndex.value, bodyIndex.value + SHA_LENGTH).toHex()
+            bodyIndex.value += SHA_LENGTH
             sb.append("$permission $hexSha $fileName\n")
         }
 

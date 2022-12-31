@@ -19,16 +19,19 @@ class GitFile(private val pathToGit: String, private val hash: String) {
         private set
 
     init {
-        parseFileStats(openGitFile())
+        val fis = openGitFile()
+        val iis = InflaterInputStream(fis)
+        parseFileStats(iis)
+        fis.close()
+        iis.close()
     }
 
-    private fun openGitFile(): InflaterInputStream {
+    private fun openGitFile(): FileInputStream {
         val subdirectory = hash.take(2)
         val hashFileName = hash.drop(2)
         val slash = File.separator
         val fileName = "$pathToGit${slash}objects$slash$subdirectory$slash$hashFileName"
-        val fis = FileInputStream(fileName)
-        return InflaterInputStream(fis)
+        return FileInputStream(fileName)
     }
 
     private fun parseFileStats(iis: InflaterInputStream) {

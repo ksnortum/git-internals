@@ -11,16 +11,6 @@ fun promptForString(prompt: String): String {
     return readln()
 }
 
-//fun toHex(input: String): String {
-//    val sb = StringBuilder()
-//
-//    for (chunk in input.chars()) {
-//        sb.append(String.format("%02x", chunk.toInt()))
-//    }
-//
-//    return sb.toString()
-//}
-
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 
 fun stringUpToStopByte(body: ByteArray, index: Wrapper<Int>, stopByte: Byte): String {

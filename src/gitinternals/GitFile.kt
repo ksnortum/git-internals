@@ -6,6 +6,8 @@ import java.util.zip.InflaterInputStream
 import kotlin.properties.Delegates
 
 class GitFile(private val pathToGit: String, private val hash: String) {
+    private val slash = File.separator
+
     lateinit var gitType: GitType
         private set
 
@@ -29,7 +31,6 @@ class GitFile(private val pathToGit: String, private val hash: String) {
     private fun openGitFile(): FileInputStream {
         val subdirectory = hash.take(2)
         val hashFileName = hash.drop(2)
-        val slash = File.separator
         val fileName = "$pathToGit${slash}objects$slash$subdirectory$slash$hashFileName"
         return FileInputStream(fileName)
     }

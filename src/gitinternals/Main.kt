@@ -7,6 +7,7 @@ fun main() {
         "cat-file" -> catFile(pathToGit)
         "list-branches" -> listBranches(pathToGit)
         "log" -> printLog(pathToGit)
+        "commit-tree" -> commitTree(pathToGit)
         else -> println("Unknown command")
     }
 }
@@ -25,4 +26,9 @@ fun listBranches(pathToGit: String) {
 fun printLog(pathToGit: String) {
     val branch = promptForString("Enter branch name:")
     GitLog(pathToGit).printLog(branch)
+}
+
+fun commitTree(pathToGit: String) {
+    val hash = promptForString("Enter commit-hash:")
+    GitTree(pathToGit).printTreeInit(hash)
 }

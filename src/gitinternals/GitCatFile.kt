@@ -66,7 +66,7 @@ class GitCatFile(private val gitFile: GitFile) {
         return sb.toString()
     }
 
-    private fun formatTree(body: ByteArray): String {
+    fun formatTree(body: ByteArray): String {
         val sb = StringBuilder()
         val bodyIndex = Wrapper(0)
 

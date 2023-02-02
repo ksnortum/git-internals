@@ -3,10 +3,11 @@ package gitinternals
 import java.io.File
 
 class GitLog(private val pathToGit: String) {
-    private val slash: String = File.separator
+    private val slash = File.separator
 
     fun printLog(branch: String) {
         var commitHash = getHashForThisBranch(branch)
+        if (commitHash == ERROR_STRING) return
 
         while (true) {
             var gitFile = GitFile(pathToGit, commitHash)
@@ -30,16 +31,22 @@ class GitLog(private val pathToGit: String) {
     }
 
     private fun printCommit(commitHash: String, mergedMessage: String, gitFile: GitFile) {
-        println("Commit: $commitHash$mergedMessage")
+        println("\nCommit: $commitHash$mergedMessage")
         val committerMatch = Regex(GitCatFile.COMMITTER_REGEX, RegexOption.MULTILINE).find(gitFile.body)
         println(GitCatFile.formatNameEmailTimestamp(committerMatch, isOriginal = false))
         val messageMatch = Regex(GitCatFile.MESSAGE_REGEX, RegexOption.DOT_MATCHES_ALL).find(gitFile.body)
         println(messageMatch!!.destructured.component1())
-        println()
     }
 
     private fun getHashForThisBranch(branch: String): String {
         val fileName = "$pathToGit${slash}refs${slash}heads$slash$branch"
-        return File(fileName).readText(Charsets.UTF_8).trim()
+        val file = File(fileName)
+
+        if (!file.exists()) {
+            println("Could not find branch ($fileName)")
+            return ERROR_STRING
+        }
+
+        return file.readText(Charsets.UTF_8).trim()
     }
 }

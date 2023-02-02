@@ -6,9 +6,13 @@ const val NULL_BYTE = 0.toByte()
 
 data class Wrapper<T> (var value: T)
 
-fun promptForString(prompt: String): String {
-    println(prompt)
-    return readln()
+fun promptForString(prompt: String, default: String = ""): String {
+    val promptWithDefault = if (default.isNotBlank()) "$prompt[$default] " else prompt
+    println(promptWithDefault)
+    var input = readln()
+    if (input.isBlank()) input = default
+
+    return input
 }
 
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }

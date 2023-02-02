@@ -61,7 +61,7 @@ class GitCatFile(private val gitFile: GitFile) {
 
         sb.append("\ncommit message:")
         val messageMatch = Regex(MESSAGE_REGEX, RegexOption.DOT_MATCHES_ALL).find(body)
-        sb.append("\n${messageMatch!!.destructured.component1()}")
+        sb.append("\n${messageMatch!!.destructured.component1()}\n")
 
         return sb.toString()
     }

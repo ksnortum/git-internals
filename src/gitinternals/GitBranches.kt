@@ -9,6 +9,7 @@ class GitBranches(private val pathToGit: String) {
 
     fun printBranches() {
         val head = getHead()
+        println()
 
         for (branch in getBranches().sorted()) {
             print(if (branch == head) "* " else "  ")

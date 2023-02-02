@@ -3,7 +3,6 @@ package gitinternals
 import java.io.File
 import java.io.FileInputStream
 import java.util.zip.InflaterInputStream
-import kotlin.properties.Delegates
 
 class GitFile(private val pathToGit: String, private val hash: String) {
     private val slash = File.separator
@@ -11,7 +10,7 @@ class GitFile(private val pathToGit: String, private val hash: String) {
     lateinit var gitType: GitType
         private set
 
-    var length by Delegates.notNull<Int>()
+    var length = 0
         private set
 
     lateinit var body: String

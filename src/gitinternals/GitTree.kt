@@ -15,7 +15,7 @@ class GitTree(private val pathToGit: String) {
         if (gitFile.body.take(TREE_PLUS_SPACE) == "tree ") {
             printTree(gitFile.body.substring(TREE_PLUS_SPACE, HASH_LENGTH + TREE_PLUS_SPACE))
         } else {
-            throw (IllegalArgumentException("Hash $commitHash is not a commit"))
+            throw IllegalArgumentException("Hash $commitHash is not a commit")
         }
     }
 
@@ -23,6 +23,7 @@ class GitTree(private val pathToGit: String) {
         var gitFile = GitFile(pathToGit, startHash)
         if (gitFile.gitType != GitType.TREE) throw IllegalArgumentException("Hash must point to tree")
         val treeString = GitCatFile(gitFile).formatTree(gitFile.bodyBytes)
+        println()
 
         for (treeElement in treeString.trim().split("\n")) {
             val (_, hash, fileName) = treeElement.split(" ")

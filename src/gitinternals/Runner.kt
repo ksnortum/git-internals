@@ -1,9 +1,11 @@
 package gitinternals
 
 import java.io.File
+import java.lang.IllegalArgumentException
 
 const val EXIT_STRING = "exit"
 const val ERROR_STRING = "error"
+const val BACK_STRING = "back"
 
 class Runner {
     private var defaultPathToGit = ""
@@ -26,7 +28,7 @@ class Runner {
             } while (fileDoesNotExist)
 
             while (true) {
-                when (promptForString("\nEnter command\n" +
+                when (promptForString("\nEnter a command (number or name):\n" +
                         "1) cat-file\n" +
                         "2) list-branches\n" +
                         "3) log\n" +
@@ -36,7 +38,10 @@ class Runner {
                     "list-branches", "2" -> listBranches(pathToGit)
                     "log", "3" -> printLog(pathToGit)
                     "commit-tree", "4" -> commitTree(pathToGit)
-                    "back", "0" -> break
+                    "back", "0" -> {
+                        println()
+                        break
+                    }
                     else -> println("Unknown command")
                 }
             }
@@ -44,7 +49,13 @@ class Runner {
     }
 
     private fun catFile(pathToGit: String) {
-        val hash = promptForString("Enter git object hash:")
+        var hash: String
+        do {
+            hash = GitHash(pathToGit).getHash("Enter as few as 3 characters of the object hash, or \"back\":")
+        } while (hash == ERROR_STRING)
+
+        if (hash == BACK_STRING) return
+
         val gitFile = GitFile(pathToGit, hash)
         println("\n${gitFile.gitType}")
         print(GitCatFile(gitFile).formatBody())
@@ -60,7 +71,21 @@ class Runner {
     }
 
     private fun commitTree(pathToGit: String) {
-        val hash = promptForString("Enter commit-hash:")
-        GitTree(pathToGit).printTreeInit(hash)
+        var tryAgain = false
+        do {
+            var hash: String
+            do {
+                hash = GitHash(pathToGit).getHash("Enter as few as 3 characters of the commit hash, or \"back\":")
+            } while (hash == ERROR_STRING)
+
+            if (hash == BACK_STRING) return
+
+            try {
+                GitTree(pathToGit).printTreeInit(hash)
+            } catch (e: IllegalArgumentException) {
+                println(e.message)
+                tryAgain = true
+            }
+        } while (tryAgain)
     }
 }

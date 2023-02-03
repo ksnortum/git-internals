@@ -1,11 +1,11 @@
 package gitinternals
 
-import java.io.File
 import java.io.FileInputStream
+import java.nio.file.Path
 import java.util.zip.InflaterInputStream
 
 class GitFile(private val pathToGit: String, private val hash: String) {
-    private val slash = File.separator
+    // private val slash = File.separator
 
     lateinit var gitType: GitType
         private set
@@ -30,8 +30,10 @@ class GitFile(private val pathToGit: String, private val hash: String) {
     private fun openGitFile(): FileInputStream {
         val subdirectory = hash.take(2)
         val hashFileName = hash.drop(2)
-        val fileName = "$pathToGit${slash}objects$slash$subdirectory$slash$hashFileName"
-        return FileInputStream(fileName)
+        // val fileName = "$pathToGit${slash}objects$slash$subdirectory$slash$hashFileName"
+        // return FileInputStream(fileName)
+        val file = Path.of(pathToGit, "objects", subdirectory, hashFileName).toFile()
+        return FileInputStream(file)
     }
 
     private fun parseFileStats(iis: InflaterInputStream) {

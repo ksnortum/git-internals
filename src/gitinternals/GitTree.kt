@@ -10,27 +10,27 @@ class GitTree(private val pathToGit: String) {
     private val slash: String = File.separator
 
     fun printTreeInit(commitHash: String) {
-        val gitFile = GitFile(pathToGit, commitHash)
+        val gitObject = GitObject(pathToGit, commitHash)
 
-        if (gitFile.body.take(TREE_PLUS_SPACE) == "tree ") {
-            printTree(gitFile.body.substring(TREE_PLUS_SPACE, HASH_LENGTH + TREE_PLUS_SPACE))
+        if (gitObject.body.take(TREE_PLUS_SPACE) == "tree ") {
+            printTree(gitObject.body.substring(TREE_PLUS_SPACE, HASH_LENGTH + TREE_PLUS_SPACE))
         } else {
             throw IllegalArgumentException("Hash $commitHash is not a commit")
         }
     }
 
     private fun printTree(startHash: String, pathSoFar: String = "") {
-        var gitFile = GitFile(pathToGit, startHash)
-        if (gitFile.gitType != GitType.TREE) throw IllegalArgumentException("Hash must point to tree")
-        val treeString = GitCatFile(gitFile).formatTree(gitFile.bodyBytes)
+        var gitObject = GitObject(pathToGit, startHash)
+        if (gitObject.gitType != GitType.TREE) throw IllegalArgumentException("Hash must point to tree")
+        val treeString = GitCatFile(gitObject).formatTree(gitObject.bodyBytes)
         println()
 
         for (treeElement in treeString.trim().split("\n")) {
             val (_, hash, fileName) = treeElement.split(" ")
             val fileToPrint = if (pathSoFar.isEmpty()) fileName else "$pathSoFar$slash$fileName"
-            gitFile = GitFile(pathToGit, hash)
+            gitObject = GitObject(pathToGit, hash)
 
-            when (gitFile.gitType) {
+            when (gitObject.gitType) {
                 GitType.TREE -> printTree(hash, fileToPrint)
                 GitType.BLOB -> println(fileToPrint)
                 GitType.COMMIT -> throw IllegalStateException("A commit file is illegal here")

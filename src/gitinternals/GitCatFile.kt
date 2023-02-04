@@ -5,7 +5,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class GitCatFile(private val gitFile: GitFile) {
+class GitCatFile(private val gitObject: GitObject) {
     companion object {
         const val SHA_LENGTH = 20
         const val SHA_REGEX = "([a-f0-9]{40})\$"
@@ -36,10 +36,10 @@ class GitCatFile(private val gitFile: GitFile) {
     }
 
     fun formatBody(): String {
-        return when (gitFile.gitType) {
-            GitType.BLOB -> gitFile.body
-            GitType.COMMIT -> formatCommit(gitFile.body)
-            GitType.TREE -> formatTree(gitFile.bodyBytes)
+        return when (gitObject.gitType) {
+            GitType.BLOB -> gitObject.body
+            GitType.COMMIT -> formatCommit(gitObject.body)
+            GitType.TREE -> formatTree(gitObject.bodyBytes)
         }
     }
 

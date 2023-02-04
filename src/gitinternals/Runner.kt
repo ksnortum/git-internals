@@ -56,9 +56,9 @@ class Runner {
 
         if (hash == BACK_STRING) return
 
-        val gitFile = GitFile(pathToGit, hash)
-        println("\n${gitFile.gitType}")
-        print(GitCatFile(gitFile).formatBody())
+        val gitObject = GitObject(pathToGit, hash)
+        println("\n${gitObject.gitType}")
+        print(GitCatFile(gitObject).formatBody())
     }
 
     private fun listBranches(pathToGit: String) {

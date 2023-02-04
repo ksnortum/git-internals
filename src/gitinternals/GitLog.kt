@@ -10,9 +10,9 @@ class GitLog(private val pathToGit: String) {
         if (commitHash == ERROR_STRING) return
 
         while (true) {
-            var gitFile = GitFile(pathToGit, commitHash)
-            printCommit(commitHash, "", gitFile)
-            val parentMatch = Regex(GitCatFile.PARENT_REGEX, RegexOption.MULTILINE).findAll(gitFile.body)
+            var gitObject = GitObject(pathToGit, commitHash)
+            printCommit(commitHash, "", gitObject)
+            val parentMatch = Regex(GitCatFile.PARENT_REGEX, RegexOption.MULTILINE).findAll(gitObject.body)
             val parentList = parentMatch.asIterable().toList()
             when (parentList.size) {
                 0 -> break
@@ -20,8 +20,8 @@ class GitLog(private val pathToGit: String) {
                 2 -> {
                     // Print second parent
                     commitHash = parentList[1].value.drop(7)
-                    gitFile = GitFile(pathToGit, commitHash)
-                    printCommit(commitHash, " (merged)", gitFile)
+                    gitObject = GitObject(pathToGit, commitHash)
+                    printCommit(commitHash, " (merged)", gitObject)
 
                     // Setup first parent to be printed
                     commitHash = parentList[0].value.drop(7)
@@ -30,11 +30,11 @@ class GitLog(private val pathToGit: String) {
         }
     }
 
-    private fun printCommit(commitHash: String, mergedMessage: String, gitFile: GitFile) {
+    private fun printCommit(commitHash: String, mergedMessage: String, gitObject: GitObject) {
         println("\nCommit: $commitHash$mergedMessage")
-        val committerMatch = Regex(GitCatFile.COMMITTER_REGEX, RegexOption.MULTILINE).find(gitFile.body)
+        val committerMatch = Regex(GitCatFile.COMMITTER_REGEX, RegexOption.MULTILINE).find(gitObject.body)
         println(GitCatFile.formatNameEmailTimestamp(committerMatch, isOriginal = false))
-        val messageMatch = Regex(GitCatFile.MESSAGE_REGEX, RegexOption.DOT_MATCHES_ALL).find(gitFile.body)
+        val messageMatch = Regex(GitCatFile.MESSAGE_REGEX, RegexOption.DOT_MATCHES_ALL).find(gitObject.body)
         println(messageMatch!!.destructured.component1())
     }
 

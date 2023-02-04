@@ -4,9 +4,7 @@ import java.io.FileInputStream
 import java.nio.file.Path
 import java.util.zip.InflaterInputStream
 
-class GitFile(private val pathToGit: String, private val hash: String) {
-    // private val slash = File.separator
-
+class GitObject(private val pathToGit: String, private val hash: String) {
     lateinit var gitType: GitType
         private set
 
@@ -20,18 +18,16 @@ class GitFile(private val pathToGit: String, private val hash: String) {
         private set
 
     init {
-        val fis = openGitFile()
+        val fis = openGitObject()
         val iis = InflaterInputStream(fis)
         parseFileStats(iis)
         fis.close()
         iis.close()
     }
 
-    private fun openGitFile(): FileInputStream {
+    private fun openGitObject(): FileInputStream {
         val subdirectory = hash.take(2)
         val hashFileName = hash.drop(2)
-        // val fileName = "$pathToGit${slash}objects$slash$subdirectory$slash$hashFileName"
-        // return FileInputStream(fileName)
         val file = Path.of(pathToGit, "objects", subdirectory, hashFileName).toFile()
         return FileInputStream(file)
     }

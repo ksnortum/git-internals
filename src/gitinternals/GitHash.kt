@@ -13,19 +13,17 @@ class GitHash(private val pathToGit: String) {
         if (hash == BACK_STRING) return BACK_STRING
         val subdirectory = hash.take(2)
         val hashFileName = hash.drop(2)
-        val files = mutableListOf<String>()
-
-        try {
+        val files = try {
             Files.newDirectoryStream(
                 Path.of(pathToGit, "objects", subdirectory),
                 "${hashFileName}*"
-            ).use { dirStream -> dirStream.forEach { files.add(it.toString()) } }
+            ).map { it.toString() }
         } catch (e: IOException) {
             println("Could not find $hash (may need more characters)")
             return ERROR_STRING
         }
 
-        if (files.size == 0) {
+        if (files.isEmpty()) {
             println("Could not find $hash (may need more characters)")
             return ERROR_STRING
         } else if (files.size > 1) {

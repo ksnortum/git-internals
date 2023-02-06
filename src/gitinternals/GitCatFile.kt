@@ -11,14 +11,14 @@ class GitCatFile(private val gitObject: GitObject) {
         const val SHA_REGEX = "([a-f0-9]{40})\$"
         const val TREE_REGEX = "^tree $SHA_REGEX"
         const val PARENT_REGEX = "^parent $SHA_REGEX"
-        const val RECORD_REGEX = "((?:\\w+ )+)(<[^>]+>) ([\\d]{10}) ([-+]\\d{4})\$"
+        const val RECORD_REGEX = "([^<]+) (<[^>]+>) ([\\d]{10}) ([-+]\\d{4})\$"
         const val AUTHOR_REGEX = "^author $RECORD_REGEX"
         const val COMMITTER_REGEX = "^committer $RECORD_REGEX"
         const val MESSAGE_REGEX = "\\n\\n(.*)\\n"
 
         fun formatNameEmailTimestamp(matcher: MatchResult?, isOriginal: Boolean): String {
             val (_, name, email, timestamp, timeZone) = matcher!!.groupValues
-            val sb = StringBuilder(name) // name has a space at the end
+            val sb = StringBuilder("$name ")
             sb.append("${email.trim('<', '>')} ")
             sb.append(if (isOriginal) "original timestamp: " else "commit timestamp: ")
             sb.append(formatTimestamp(timestamp, timeZone))
